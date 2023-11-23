@@ -1,24 +1,44 @@
 // app.js
 const express = require('express');
-const app = express();
-const port = 3307;
+const { Sequelize, DataTypes } = require('sequelize');
+const productController = require('./controllers/productController');
+const ProductModel = require('./models/product');
 
-// Middleware para permitir o uso de JSON no corpo das requisições
+const app = express();
+const port = 5000;
+
 app.use(express.json());
 
-// Importa o controller
-const productController = require('./controllers/productController');
+// Configuração do banco de dados
+const dbConfig = {
+  dialect: 'mysql',
+  host: 'localhost',
+  username: 'Pichau',
+  password: '12345678',
+  database: 'mvc_sequelize'
+};
 
-// Rota para criar um produto
-app.post('/products', async (req, res) => productController.createProduct(req, res));
+// Cria uma instância do Sequelize e do modelo do produto
+const sequelize = new Sequelize(dbConfig);
+const Product = ProductModel(sequelize, DataTypes);
 
-// Rota para buscar um produto por ID
-app.get('/products/:id', async (req, res) => productController.getProductById(req, res));
+// Adiciona as rotas
+app.post('/products', async (req, res) => productController.createProduct(req, res, Product));
+app.get('/products/:id', async (req, res) => productController.getProductById(req, res, Product));
+app.get('/products', async (req, res) => productController.getAllProducts(req, res, Product));
 
-// Rota para buscar todos os produtos
-app.get('/products', async (req, res) => productController.getAllProducts(req, res));
+// Inicia o servidor
+sequelize.authenticate()
+  .then(() => {
+    console.log('Conexão com o banco de dados estabelecida com sucesso.');
 
-// Inicie o servidor
-app.listen(port, () => {
-  console.log(`Servidor está rodando na porta ${port}`);
-});
+    // Sincroniza o modelo do produto com o banco de dados e inicia o servidor
+    sequelize.sync().then(() => {
+      app.listen(port, () => {
+        console.log(`Servidor está rodando na porta ${port}`);
+      });
+    });
+  })
+  .catch((err) => {
+    console.error('Não foi possível conectar ao banco de dados:', err);
+  });

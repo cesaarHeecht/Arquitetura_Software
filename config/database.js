@@ -1,16 +1,17 @@
-// config/database.js 
-const { Sequelize } = require('sequelize'); 
-const sequelize = new Sequelize('mvc_sequelize', 'Pichau', "29032004eC!", { 
+const { Sequelize } = require('sequelize');
 
-  host: 'localhost', 
-  dialect: 'mysql', 
+const sequelize = new Sequelize('mvc_sequelize', 'Pichau', '12345678', {
+  host: 'localhost',
+  dialect: 'mysql',
+});
 
-}); 
+// Testar a conexão
+sequelize.authenticate()
+  .then(() => {
+    console.log('Conexão com o banco de dados estabelecida com sucesso!');
+  })
+  .catch((error) => {
+    console.error('Falha ao conectar ao banco de dados:', error);
+  });
 
- sequelize.authenticate().then(function(){
-    console.log("Conectado com sucesso!")
- }).catch(function(erro){
-    console.log("Falha ao seu conectar" + erro)
- })
-
-module.exports = sequelize; 
+module.exports = sequelize;

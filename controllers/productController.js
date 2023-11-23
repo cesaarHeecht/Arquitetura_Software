@@ -1,43 +1,49 @@
 // controllers/productController.js
-const { product }  = require('../models/product');
+const { Product } = require('../models/product');
 
 module.exports = {
-  // Gravar os dados do produto no banco de dados
-  async createProduct(req, res) {
+  async createProduct(req, res, ProductModel) {
     try {
       const { name, category, listPrice } = req.body;
-      const product = await Product.create({ name, category, listPrice });
-      res.json(product);
+      const product = await ProductModel.create({ name, category, listPrice });
+
+      return res.status(201).json(product); // 201 Created
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: 'Erro ao criar o produto' });
+
+      // Verifica se é um erro de validação do Sequelize
+      if (error.name === 'SequelizeValidationError') {
+        return res.status(400).json({ error: 'Erro de validação ao criar o produto', details: error.errors });
+      }
+
+      return res.status(500).json({ error: 'Erro ao criar o produto', details: error.message });
     }
   },
 
-  // Consultar produtos a partir do ID
-  async getProductById(req, res) {
+  async getProductById(req, res, ProductModel) {
     try {
       const { id } = req.params;
-      const product = await Product.findByPk(id);
-      if (product) {
-        res.json(product);
-      } else {
-        res.status(404).json({ error: 'Produto não encontrado' });
+      const product = await ProductModel.findByPk(id);
+
+      if (!product) {
+        return res.status(404).json({ error: 'Produto não encontrado' });
       }
+
+      return res.json(product);
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: 'Erro ao buscar o produto' });
+      return res.status(500).json({ error: 'Erro ao buscar o produto', details: error.message });
     }
   },
 
-  // Consultar todos os produtos na base de dados
-  async getAllProducts(req, res) {
+  async getAllProducts(req, res, ProductModel) {
     try {
-      const products = await Product.findAll();
-      res.json(products);
+      const products = await ProductModel.findAll();
+      return res.json(products);
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: 'Erro ao buscar os produtos' });
+      return res.status(500).json({ error: 'Erro ao buscar os produtos', details: error.message });
     }
   },
 };
+
